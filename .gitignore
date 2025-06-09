@@ -1,0 +1,14 @@
+node_modules
+
+# Output
+/build
+
+# OS
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
