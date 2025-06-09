@@ -1,5 +1,5 @@
-const W = 1024;
-const H = 1024;
+const W = 512;
+const H = 512;
 let fonts=[];
 let areas = [];
 let pts = [];
@@ -152,63 +152,129 @@ function generatesvg()
     svg.push(`<rect width="100%" height="100%" fill="white"/>`); // background
   
     for (let b of boxes) {
-      let fontFamily = b.f.font.names.fontFamily.en || "sans-serif";
-      //console.log(b.f.font.names);
-      let rotate = b.o * 90;
-      svg.push(`
-        <text x="${b.x}" y="${b.y}" 
-          font-family="${fontFamily}" 
-          font-size="${b.s}" 
-          fill="${b.c}" 
-          transform="rotate(${rotate} ${b.x} ${b.y})"
-          dominant-baseline="hanging">
-          ${b.t}
-        </text>
-      `);
+        let fontFamily = b.f.font.names.fontFamily.en || "sans-serif";
+        //console.log(b.f.font.names);
+        let rotate = b.o * 90;
+        let pts = b.f.textToPoints(b.t,b.x,b.y,b.s);
+        let pp = pts.map(point => `${point.x},${point.y}`).join(',');
+        svg.push(`
+            <polygon points="${pp}" fill="black" stroke="none"/>
+        `);
+    //   svg.push(`
+    //     <text x="${b.x}" y="${b.y}" 
+    //       font-family="${fontFamily}" 
+    //       font-size="${b.s}" 
+    //       fill="${b.c}" 
+    //       transform="rotate(${rotate} ${b.x} ${b.y})"
+    //       dominant-baseline="hanging">
+    //       ${b.t}
+    //     </text>
+    //   `);
     }
   
     svg.push(`</svg>`);
     return svg.join("\n");
 }
-
+let tosave=false;
 function savesvg()
 {
-    let svgString=generatesvg();
-    const blob = new Blob([svgString], {type: "image/svg+xml"});
-    const url = URL.createObjectURL(blob);
+    // let svgString=generatesvg();
+    // const blob = new Blob([svgString], {type: "image/svg+xml"});
+    // const url = URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "output.svg";
-    a.click();
+    // const a = document.createElement("a");
+    // a.href = url;
+    // a.download = "output.svg";
+    // a.click();
 
-    URL.revokeObjectURL(url);
+    // URL.revokeObjectURL(url);
+    tosave=true;
 }
 
-
+let div;
+let st
 function setup() {
-  createCanvas(W, H);
+  createCanvas(W, H,SVG);
   pixelDensity(1);
   areas=[];
-//   btnsave = createButton('Save SVG');
-//   btnsave.position(10,10);
-//   btnsave.mousePressed(savesvg);
-  randomSeed(1);
+  btnsave = createButton('Save SVG');
+  btnsave.position(10,10);
+  btnsave.mousePressed(savesvg);
+  div=createDiv('b:a');
+  div.position(W+10,10)
+  //randomSeed(1);
+  st=millis()
 }
 
-function draw() {
+let lo = 0
+let hasmouse=false;
+let mx;
+let my;
+function mouseClicked()
+{
+    mx=mouseX;
+    my=mouseY;
+    console.log(mx,my)
+    hasmouse=true;
+}
+
+function doit()
+{
     background(255);
     if (true)
     {
-        let x = boxes.length<250?round(random(W)/64)*64:random(W);
-        let y = boxes.length<250?round(random(H)/64)*64:random(H);
-        //const area = findMaxFreeArea(x,y,areas,W,H);
-        let sz = 60;//random(80);
+        let x;
+        let y;
+        if (hasmouse)
+        {
+            x=mx;
+            y=my;
+            hasmouse=false;
+        }
+        else {
+            x = boxes.length<50?round(random(W)/64)*64:random(W);
+            y = boxes.length<50?round(random(H)/64)*64:random(H);
+        }
+        const ar = findMaxFreeArea(x,y,areas,W,H);
+        _expand(ar,-2)
+        let orient = ar.w>ar.h?random([0,2]):random([1,3]);
+        //orient = boxes.length % 4
+        if (boxes.length>100){
+            switch(orient){
+                case 0:
+                    x=ar.x
+                    y=ar.y+ar.h
+                    break;
+                case 1:
+                    x = ar.x
+                    y = ar.y
+                    break;
+                case 2:
+                    x=ar.x+ar.w
+                    y=ar.y+2
+                    break;
+                case 3:
+                    x=ar.x+ar.w
+                    y= ar.y+ar.h
+                    break
+            }
+        }
+        if (!tosave){
+            push()
+            noFill()
+            stroke('red')
+            rect(ar.x,ar.y,ar.w,ar.h)
+            fill('red')
+            noStroke()
+            circle(x,y,10)
+            pop()
+        }
+        let sz = 30;//random(80);
         let ok = false;
         let t=null;
-        let orient = random([0,1,2,3]);
         let fnt=random(fonts);
         let txt=random(['RUN','run','Run'])
+        div.html(`LOOP: ${lo}<br/>Teks:${boxes.length}<br/>SZ:${sz}<br/>Orient:${orient}`)
         while (!ok){
             t = new Teks(
                 x,y,
@@ -222,7 +288,7 @@ function draw() {
                 break;
             }
             sz--;
-            if (sz<12){
+            if (sz<3){
                 ok=false;
                 break;
             }
@@ -237,5 +303,20 @@ function draw() {
     }
     for(let b of boxes){
         b.draw();
+    }
+    if (tosave){
+        save('out.svg');
+        tosave=false;
+    }
+    lo++;
+
+}
+
+
+function draw() {
+    let ct=millis()
+    if (ct-st>100){
+        doit();
+        st=ct;
     }
 }
