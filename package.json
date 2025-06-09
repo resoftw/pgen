@@ -1,0 +1,23 @@
+{
+  "name": "pgen",
+  "version": "1.0.0",
+  "description": "partter generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/resoftw/pgen.git"
+  },
+  "keywords": [
+    "pattern",
+    "generator"
+  ],
+  "author": "resoftw",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/resoftw/pgen/issues"
+  },
+  "homepage": "https://github.com/resoftw/pgen#readme"
+}
